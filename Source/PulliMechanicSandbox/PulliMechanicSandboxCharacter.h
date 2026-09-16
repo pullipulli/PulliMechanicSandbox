@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "PulliMechanicSandboxCharacter.generated.h"
 
+class UVaultingComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -25,11 +26,15 @@ class APulliMechanicSandboxCharacter : public ACharacter
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	TObjectPtr<UCameraComponent> FollowCamera;
+	
+	/** Vaulting */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UVaultingComponent> VaultingComponent;
 	
 protected:
 

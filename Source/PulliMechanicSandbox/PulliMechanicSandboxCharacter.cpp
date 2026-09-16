@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "PulliMechanicSandbox.h"
+#include "VaultingComponent.h"
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 {
@@ -48,6 +49,9 @@ APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	VaultingComponent = CreateDefaultSubobject<UVaultingComponent>(TEXT("VaultingComponent"));
+	
 }
 
 void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -56,8 +60,8 @@ void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APulliMechanicSandboxCharacter::DoJumpStart);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APulliMechanicSandboxCharacter::DoJumpEnd);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APulliMechanicSandboxCharacter::Move);
@@ -122,12 +126,20 @@ void APulliMechanicSandboxCharacter::DoLook(float Yaw, float Pitch)
 
 void APulliMechanicSandboxCharacter::DoJumpStart()
 {
-	// signal the character to jump
-	Jump();
+	if (VaultingComponent->CanVaultOrMantle())
+	{
+		VaultingComponent->DoVaultOrMantle();
+	}
+	else
+	{
+		Jump();
+	}
 }
 
 void APulliMechanicSandboxCharacter::DoJumpEnd()
 {
-	// signal the character to stop jumping
-	StopJumping();
+	if (bPressedJump)
+	{
+		StopJumping();
+	}
 }
