@@ -17,6 +17,8 @@ void UVaultingComponent::BeginPlay()
 
 	CharacterMovementComponent = GetOwner()->FindComponentByClass<UCharacterMovementComponent>();
 	CharacterCapsuleComponent = GetOwner()->FindComponentByClass<UCapsuleComponent>();
+	
+	CachedVaultCosineThreshold = FMath::Cos(FMath::DegreesToRadians(MaxDegreesBeforeVault));
 }
 
 
@@ -25,42 +27,91 @@ void UVaultingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+bool UVaultingComponent::HasHitValidWall(FHitResult Hit, FVector TraceDirection, bool hasHittedSomething)
+{
+	return hasHittedSomething &&
+		FVector::DotProduct(TraceDirection, Hit.ImpactNormal) <= -CachedVaultCosineThreshold;
+}
+
 bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 {
 	if (!CanTryToVault()) return false;
 	
-	FHitResult Hit;
+	FHitResult ForwardWallHit;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(GetOwner());
-	FVector CurrentVelocity = CharacterMovementComponent->Velocity;
 	FCollisionShape CapsuleShape = CharacterCapsuleComponent->GetCollisionShape();
+	
+	FVector CurrentVelocity = CharacterMovementComponent->Velocity;
+	FVector Forward = GetOwner()->GetActorForwardVector();
+	FVector TraceDirection;
+	
+	if (FMath::IsNearlyZero(FVector::DotProduct(CurrentVelocity, Forward)))
+	{
+		TraceDirection = GetOwner()->GetActorForwardVector();
+	}
+	else
+	{
+		TraceDirection = CurrentVelocity.GetSafeNormal();
+	}
 	
 	FVector SweepStartLocation = CharacterCapsuleComponent->GetComponentLocation();
 	SweepStartLocation.Z += CapsuleZOffset;
 	
 	bool hasHittedSomething = GetWorld()->SweepSingleByChannel(
-		Hit,
+		ForwardWallHit,
 		SweepStartLocation,
-		SweepStartLocation + CurrentVelocity.GetSafeNormal() * TraceLength,
+		SweepStartLocation + TraceDirection * TraceLength,
 		CharacterCapsuleComponent->GetComponentQuat(),
 		ECC_WorldStatic,
 		CapsuleShape,
 		CollisionParams
 		);
 	
-	if (hasHittedSomething)
+	if (HasHitValidWall(ForwardWallHit, TraceDirection, hasHittedSomething))
 	{
-		DrawDebugCapsule(
+		FVector ImpactPointInsideWall = ForwardWallHit.ImpactPoint - ForwardWallHit.ImpactNormal * MinWallDepth;
+		FVector LedgePointTraceStart = FVector{ImpactPointInsideWall.X, ImpactPointInsideWall.Y, MaxVaultingHeight};
+		FVector LedgePointTraceEnd = FVector{ImpactPointInsideWall.X, ImpactPointInsideWall.Y, MinVaultingHeight};
+		
+		DrawDebugDirectionalArrow(
 			GetWorld(),
-			Hit.Location,
-			CapsuleShape.GetCapsuleHalfHeight(),
-			CapsuleShape.GetCapsuleRadius(),
-			CharacterCapsuleComponent->GetComponentQuat(),
-			FColor::Red,
+			LedgePointTraceStart,
+			LedgePointTraceEnd,
+			5.f,
+			FColor::Black,
 			false,
-			5.f
+			5.f,
+			10,
+			1.f
 			);
-		return true;
+		
+		FHitResult VerticalWallHit;
+		if (GetWorld()->LineTraceSingleByChannel(
+			VerticalWallHit,
+			LedgePointTraceStart,
+			LedgePointTraceEnd,
+			ECC_WorldStatic
+		))
+		{
+			OutVaultData.bIsValid = true;
+			
+			DrawDebugCapsule(
+				GetWorld(),
+				ForwardWallHit.Location,
+				CapsuleShape.GetCapsuleHalfHeight(),
+				CapsuleShape.GetCapsuleRadius(),
+				CharacterCapsuleComponent->GetComponentQuat(),
+				FColor::Red,
+				false,
+				5.f
+			);
+			
+			DrawDebugPoint(GetWorld(), VerticalWallHit.ImpactPoint, 5, FColor::Purple, false, 5.f, 10.f);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	return false;

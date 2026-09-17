@@ -43,7 +43,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UCapsuleComponent> CharacterCapsuleComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting | Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MinVaultingHeight = 30.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
@@ -55,6 +55,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MinSpeedToVault = .5f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
+	float MaxDegreesBeforeVault = 75.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float TraceLength = 50.f;
 	
@@ -62,5 +65,7 @@ protected:
 	float CapsuleZOffset = 5.f;
 private:
 	bool CanTryToVault();
+	float CachedVaultCosineThreshold = -1.f;
+	bool HasHitValidWall(FHitResult Hit, FVector TraceDirection, bool hasHittedSomething);
 };
 
