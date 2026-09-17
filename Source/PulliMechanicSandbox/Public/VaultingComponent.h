@@ -12,7 +12,14 @@ class UCharacterMovementComponent;
 
 struct FVaultResult
 {
-	
+	FVector FrontWallImpactPoint;
+	FVector BackWallImpactPoint;
+	FVector FrontWallNormal;
+	FVector BackWallNormal;
+	FVector LedgePoint;
+	bool bShouldVault = false;
+	bool bShouldMantle = false;
+	bool bIsValid = false;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

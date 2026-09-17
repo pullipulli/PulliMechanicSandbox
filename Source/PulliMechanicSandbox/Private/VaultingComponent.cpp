@@ -50,7 +50,6 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 	
 	if (hasHittedSomething)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Can Vault!"));
 		DrawDebugCapsule(
 			GetWorld(),
 			Hit.Location,
@@ -69,7 +68,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 
 void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 {
-
+	GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoVault!");
 }
 
 bool UVaultingComponent::CanTryToVault()
