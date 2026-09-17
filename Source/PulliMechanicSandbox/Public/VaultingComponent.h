@@ -7,7 +7,13 @@
 #include "VaultingComponent.generated.h"
 
 
+class UCapsuleComponent;
 class UCharacterMovementComponent;
+
+struct FVaultResult
+{
+	
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UVaultingComponent : public UActorComponent
@@ -17,30 +23,37 @@ class UVaultingComponent : public UActorComponent
 public:	
 	UVaultingComponent();
 
-protected:
 	virtual void BeginPlay() override;
-
-public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	bool CanVaultOrMantle();
-	void DoVaultOrMantle();
+	bool TryDetectVault(FVaultResult& OutVaultData);
+	void DoVault(const FVaultResult& VaultData);
 	
 protected:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY()
 	TObjectPtr<UCharacterMovementComponent> CharacterMovementComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UCapsuleComponent> CharacterCapsuleComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting | Settings")
 	float MinVaultingHeight = 30.f;
 	
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting | Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MaxVaultingHeight = 200.f;
 	
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting | Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MinWallDepth = 2.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting | Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MinSpeedToVault = .5f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
+	float TraceLength = 50.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
+	float CapsuleZOffset = 5.f;
+private:
+	bool CanTryToVault();
 };
+

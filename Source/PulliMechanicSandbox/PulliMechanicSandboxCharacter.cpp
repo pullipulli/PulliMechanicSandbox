@@ -126,9 +126,10 @@ void APulliMechanicSandboxCharacter::DoLook(float Yaw, float Pitch)
 
 void APulliMechanicSandboxCharacter::DoJumpStart()
 {
-	if (VaultingComponent->CanVaultOrMantle())
+	FVaultResult VaultResult;
+	if (VaultingComponent->TryDetectVault(VaultResult))
 	{
-		VaultingComponent->DoVaultOrMantle();
+		VaultingComponent->DoVault(VaultResult);
 	}
 	else
 	{
