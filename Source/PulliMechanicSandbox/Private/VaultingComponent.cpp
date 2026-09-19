@@ -27,13 +27,23 @@ void UVaultingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UVaultingComponent::HasHitValidWall(FHitResult Hit, FVector TraceDirection, bool hasHittedSomething)
+bool UVaultingComponent::HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection, const bool bHasHitSomething) const
 {
-	return hasHittedSomething &&
+	return bHasHitSomething &&
 		FVector::DotProduct(TraceDirection, Hit.ImpactNormal) <= -CachedVaultCosineThreshold;
 }
 
-bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
+bool UVaultingComponent::TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit) const
+{
+	return GetWorld()->LineTraceSingleByChannel(
+		VerticalWallHit,
+		LedgePointTraceStart,
+		LedgePointTraceEnd,
+		ECC_WorldStatic
+	) && !VerticalWallHit.bStartPenetrating;
+}
+
+bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 {
 	if (!CanTryToVault()) return false;
 	
@@ -58,7 +68,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 	FVector SweepStartLocation = CharacterCapsuleComponent->GetComponentLocation();
 	SweepStartLocation.Z += CapsuleZOffset;
 	
-	bool hasHittedSomething = GetWorld()->SweepSingleByChannel(
+	bool bHasHitSomething = GetWorld()->SweepSingleByChannel(
 		ForwardWallHit,
 		SweepStartLocation,
 		SweepStartLocation + TraceDirection * TraceLength,
@@ -68,7 +78,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 		CollisionParams
 		);
 	
-	if (HasHitValidWall(ForwardWallHit, TraceDirection, hasHittedSomething))
+	if (HasHitValidWall(ForwardWallHit, TraceDirection, bHasHitSomething))
 	{
 		FVector ImpactPointInsideWall = ForwardWallHit.ImpactPoint - ForwardWallHit.ImpactNormal * MinWallDepth;
 		FVector LedgePointTraceStart = FVector{ImpactPointInsideWall.X, ImpactPointInsideWall.Y, MaxVaultingHeight};
@@ -87,12 +97,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData)
 			);
 		
 		FHitResult VerticalWallHit;
-		if (GetWorld()->LineTraceSingleByChannel(
-			VerticalWallHit,
-			LedgePointTraceStart,
-			LedgePointTraceEnd,
-			ECC_WorldStatic
-		))
+		if (TrySearchingForValidLedgePoint(LedgePointTraceStart, LedgePointTraceEnd, VerticalWallHit))
 		{
 			OutVaultData.bIsValid = true;
 			
@@ -122,7 +127,7 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 	GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoVault!");
 }
 
-bool UVaultingComponent::CanTryToVault()
+bool UVaultingComponent::CanTryToVault() const
 {
 	FVector CurrentVelocity = CharacterMovementComponent->Velocity;
 	FVector Forward = GetOwner()->GetActorForwardVector();

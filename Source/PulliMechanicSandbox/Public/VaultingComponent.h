@@ -33,7 +33,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	bool TryDetectVault(FVaultResult& OutVaultData);
+	bool TryDetectVault(FVaultResult& OutVaultData) const;
 	void DoVault(const FVaultResult& VaultData);
 	
 protected:
@@ -64,8 +64,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float CapsuleZOffset = 5.f;
 private:
-	bool CanTryToVault();
+	bool CanTryToVault() const;
+	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection, bool bHasHitSomething) const;
+	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit) const;
+
 	float CachedVaultCosineThreshold = -1.f;
-	bool HasHitValidWall(FHitResult Hit, FVector TraceDirection, bool hasHittedSomething);
 };
 
