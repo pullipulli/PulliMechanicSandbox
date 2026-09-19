@@ -13,9 +13,7 @@ class UCharacterMovementComponent;
 struct FVaultResult
 {
 	FVector FrontWallImpactPoint;
-	FVector BackWallImpactPoint;
 	FVector FrontWallNormal;
-	FVector BackWallNormal;
 	FVector LedgePoint;
 	bool bShouldVault = false;
 	bool bShouldMantle = false;
@@ -58,6 +56,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MaxDegreesBeforeVault = 75.f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
+	float MinSpaceToVaultFromLedgePoint = 55.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float TraceLength = 50.f;
 	
@@ -65,8 +66,8 @@ protected:
 	float CapsuleZOffset = 5.f;
 private:
 	bool CanTryToVault() const;
-	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection, bool bHasHitSomething) const;
-	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit) const;
+	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection) const;
+	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit, const FCollisionQueryParams& CollisionParams) const;
 
 	float CachedVaultCosineThreshold = -1.f;
 };
