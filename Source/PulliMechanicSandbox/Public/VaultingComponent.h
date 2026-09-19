@@ -15,6 +15,7 @@ struct FVaultResult
 	FVector FrontWallImpactPoint;
 	FVector FrontWallNormal;
 	FVector LedgePoint;
+	FVector TargetLandingLocation;
 	bool bShouldVault = false;
 	bool bShouldMantle = false;
 	bool bIsValid = false;

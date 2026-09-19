@@ -56,7 +56,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 	FVector CurrentVelocity = CharacterMovementComponent->Velocity;
 	FVector TraceDirection;
 	
-	if (CurrentVelocity.IsNearlyZero())
+	if (FVector2D(CurrentVelocity).IsNearlyZero())
 	{
 		TraceDirection = GetOwner()->GetActorForwardVector();
 	}
@@ -122,7 +122,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			MantleFinalPosition.Z += CapsuleShape.GetCapsuleHalfHeight();
 			
 			FVector VaultTraceStart = MantleFinalPosition;
-			VaultTraceStart += -OutVaultData.FrontWallNormal * MinSpaceToVaultFromLedgePoint;
+			VaultTraceStart += (-OutVaultData.FrontWallNormal).GetSafeNormal2D() * MinSpaceToVaultFromLedgePoint;
 			
 			FVector VaultTraceEnd = FVector{VaultTraceStart.X, VaultTraceStart.Y, GetOwner()->GetActorLocation().Z};
 			
@@ -164,6 +164,8 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 					false,
 					5.f
 				);
+				
+				OutVaultData.TargetLandingLocation = MantleFinalPosition;
 			}
 			else
 			{
@@ -177,6 +179,8 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 					false,
 					5.f
 				);
+				
+				OutVaultData.TargetLandingLocation = VaultTraceEnd;
 			}
 			
 			return true;
@@ -198,7 +202,6 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 	{
 		GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoVault!");
 	}
-
 }
 
 bool UVaultingComponent::CanTryToVault() const
