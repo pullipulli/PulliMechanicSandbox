@@ -65,6 +65,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float CapsuleZOffset = 5.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
+	float GroundTraceTolerance = 10.f;
 private:
 	bool CanTryToVault() const;
 	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection) const;

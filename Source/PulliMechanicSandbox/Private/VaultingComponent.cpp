@@ -116,7 +116,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 				5.f
 			);
 			
-			DrawDebugPoint(GetWorld(), VerticalWallHit.ImpactPoint, 5, FColor::Purple, false, 5.f, 10.f);
+			DrawDebugPoint(GetWorld(), OutVaultData.LedgePoint, 5, FColor::Purple, false, 5.f, 10.f);
 			
 			FVector MantleFinalPosition = VerticalWallHit.ImpactPoint;
 			MantleFinalPosition.Z += CapsuleShape.GetCapsuleHalfHeight();
@@ -124,7 +124,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			FVector VaultTraceStart = MantleFinalPosition;
 			VaultTraceStart += (-OutVaultData.FrontWallNormal).GetSafeNormal2D() * MinSpaceToVaultFromLedgePoint;
 			
-			FVector VaultTraceEnd = FVector{VaultTraceStart.X, VaultTraceStart.Y, GetOwner()->GetActorLocation().Z};
+			FVector VaultTraceEnd = FVector{VaultTraceStart.X, VaultTraceStart.Y, FloorZ};
 			
 			DrawDebugDirectionalArrow(
 				GetWorld(),
@@ -140,7 +140,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			
 			FHitResult MantleHitResult;
 			
-			bool bShouldMantle = GetWorld()->SweepSingleByChannel(
+			bool bHasHitGround = GetWorld()->SweepSingleByChannel(
 				MantleHitResult,
 				VaultTraceStart,
 				VaultTraceEnd,
@@ -150,38 +150,37 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 				CollisionParams
 			);
 			
-			OutVaultData.bShouldMantle = bShouldMantle || MantleHitResult.bStartPenetrating;
-			
-			if (OutVaultData.bShouldMantle)
+			if (!bHasHitGround || MantleHitResult.bStartPenetrating)
 			{
-				DrawDebugCapsule(
-					GetWorld(),
-					MantleFinalPosition,
-					CapsuleShape.GetCapsuleHalfHeight(),
-					CapsuleShape.GetCapsuleRadius(),
-					CharacterCapsuleComponent->GetComponentQuat(),
-					FColor::Red,
-					false,
-					5.f
-				);
-				
+				OutVaultData.bShouldMantle = true;
 				OutVaultData.TargetLandingLocation = MantleFinalPosition;
 			}
 			else
 			{
-				DrawDebugCapsule(
-					GetWorld(),
-					VaultTraceEnd,
-					CapsuleShape.GetCapsuleHalfHeight(),
-					CapsuleShape.GetCapsuleRadius(),
-					CharacterCapsuleComponent->GetComponentQuat(),
-					FColor::White,
-					false,
-					5.f
-				);
-				
-				OutVaultData.TargetLandingLocation = VaultTraceEnd;
+				float HitGroundZ = MantleHitResult.ImpactPoint.Z;
+				float GroundDiff = FMath::Abs(HitGroundZ - FloorZ);
+				if (GroundDiff <= GroundTraceTolerance)
+				{
+					OutVaultData.bShouldMantle = false;
+					OutVaultData.TargetLandingLocation = MantleHitResult.Location;
+				}
+				else
+				{
+					OutVaultData.bShouldMantle = true;
+					OutVaultData.TargetLandingLocation = MantleFinalPosition;
+				}
 			}
+
+			DrawDebugCapsule(
+				GetWorld(),
+				OutVaultData.TargetLandingLocation,
+				CapsuleShape.GetCapsuleHalfHeight(),
+				CapsuleShape.GetCapsuleRadius(),
+				CharacterCapsuleComponent->GetComponentQuat(),
+				FColor::White,
+				false,
+				5.f
+			);
 			
 			return true;
 		}
