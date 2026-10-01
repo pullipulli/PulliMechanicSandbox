@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PulliMechanicSandboxCharacter.h"
+#include "PulliMechanicSandboxCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -12,6 +13,7 @@
 #include "InputActionValue.h"
 #include "PulliMechanicSandbox.h"
 #include "VaultingComponent.h"
+#include "MotionWarpingComponent.h"
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 {
@@ -51,7 +53,7 @@ APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 	
 	VaultingComponent = CreateDefaultSubobject<UVaultingComponent>(TEXT("VaultingComponent"));
-	
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

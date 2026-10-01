@@ -3,6 +3,7 @@
 
 #include "VaultingComponent.h"
 
+#include "MotionWarpingComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -17,6 +18,8 @@ void UVaultingComponent::BeginPlay()
 
 	CharacterMovementComponent = GetOwner()->FindComponentByClass<UCharacterMovementComponent>();
 	CharacterCapsuleComponent = GetOwner()->FindComponentByClass<UCapsuleComponent>();
+	CharacterMotionWarpingComponent = GetOwner()->FindComponentByClass<UMotionWarpingComponent>();
+	SkeletonAnimInstance = GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetAnimInstance();
 	
 	CachedVaultCosineThreshold = FMath::Cos(FMath::DegreesToRadians(MaxDegreesBeforeVault));
 }
@@ -104,6 +107,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			OutVaultData.FrontWallNormal = ForwardWallHit.ImpactNormal;
 			OutVaultData.FrontWallImpactPoint = ForwardWallHit.ImpactPoint;
 			OutVaultData.LedgePoint = VerticalWallHit.ImpactPoint;
+			OutVaultData.LandingActor = ForwardWallHit.GetActor();
 			
 			DrawDebugCapsule(
 				GetWorld(),
@@ -193,15 +197,35 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 
 void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 {
+	UAnimMontage* SelectedMontage;
 	if (VaultData.bShouldMantle)
 	{
 		GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoMantle!");
+		SelectedMontage = MantleMontage;
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoVault!");
+		SelectedMontage = VaultMontage;
 	}
+	
+	CurrentVaultData = VaultData;
+	
+	CharacterMovementComponent->SetMovementMode(MOVE_Flying);
+	CharacterCapsuleComponent->IgnoreActorWhenMoving(VaultData.LandingActor, true);
+	
+	CharacterMotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(
+		FName("Landing"),
+		VaultData.TargetLandingLocation,
+		(-VaultData.FrontWallNormal).Rotation()
+	);
+	
+	SkeletonAnimInstance->Montage_Play(SelectedMontage);
+
+	//GetOwner()->SetActorLocation(VaultData.TargetLandingLocation);
 }
+
+
 
 bool UVaultingComponent::CanTryToVault() const
 {

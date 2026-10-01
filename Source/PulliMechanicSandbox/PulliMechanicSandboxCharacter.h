@@ -10,6 +10,7 @@
 class UVaultingComponent;
 class USpringArmComponent;
 class UCameraComponent;
+class UMotionWarpingComponent;
 class UInputAction;
 struct FInputActionValue;
 
@@ -35,6 +36,10 @@ class APulliMechanicSandboxCharacter : public ACharacter
 	/** Vaulting */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UVaultingComponent> VaultingComponent;
+	
+	/** Vaulting */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 	
 protected:
 

@@ -7,6 +7,7 @@
 #include "VaultingComponent.generated.h"
 
 
+class UMotionWarpingComponent;
 class UCapsuleComponent;
 class UCharacterMovementComponent;
 
@@ -16,6 +17,7 @@ struct FVaultResult
 	FVector FrontWallNormal;
 	FVector LedgePoint;
 	FVector TargetLandingLocation;
+	AActor* LandingActor;
 	bool bShouldVault = false;
 	bool bShouldMantle = false;
 	bool bIsValid = false;
@@ -41,6 +43,12 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<UCapsuleComponent> CharacterCapsuleComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UMotionWarpingComponent> CharacterMotionWarpingComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UAnimInstance> SkeletonAnimInstance;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MinVaultingHeight = 30.f;
@@ -68,11 +76,18 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float GroundTraceTolerance = 10.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Animation")
+	TObjectPtr<UAnimMontage> VaultMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Animation")
+	TObjectPtr<UAnimMontage> MantleMontage;
 private:
 	bool CanTryToVault() const;
 	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection) const;
 	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit, const FCollisionQueryParams& CollisionParams) const;
-
+	
+	FVaultResult CurrentVaultData;
 	float CachedVaultCosineThreshold = -1.f;
 };
 
