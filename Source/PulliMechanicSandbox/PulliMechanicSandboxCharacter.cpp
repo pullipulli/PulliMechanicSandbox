@@ -12,7 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "PulliMechanicSandbox.h"
-#include "VaultingComponent.h"
+#include "VaultingSystem/VaultingComponent.h"
 #include "MotionWarpingComponent.h"
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()

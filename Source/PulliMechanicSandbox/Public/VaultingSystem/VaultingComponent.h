@@ -3,25 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "VaultResult.h"
 #include "Components/ActorComponent.h"
 #include "VaultingComponent.generated.h"
 
 
+class UVaultingNotifyState;
 class UMotionWarpingComponent;
 class UCapsuleComponent;
 class UCharacterMovementComponent;
-
-struct FVaultResult
-{
-	FVector FrontWallImpactPoint;
-	FVector FrontWallNormal;
-	FVector LedgePoint;
-	FVector TargetLandingLocation;
-	AActor* LandingActor;
-	bool bShouldVault = false;
-	bool bShouldMantle = false;
-	bool bIsValid = false;
-};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UVaultingComponent : public UActorComponent
@@ -82,12 +72,26 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Animation")
 	TObjectPtr<UAnimMontage> MantleMontage;
+	
+	UFUNCTION()
+	void OnVaultNotifyBegin();
+	
+	UFUNCTION()
+	void OnVaultNotifyEnd();
+	
+	UFUNCTION()
+	void OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 private:
 	bool CanTryToVault() const;
 	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection) const;
 	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit, const FCollisionQueryParams& CollisionParams) const;
 	
 	FVaultResult CurrentVaultData;
+	UPROPERTY()
+	TObjectPtr<UVaultingNotifyState> ActiveVaultingNotifyState = nullptr;
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> ActiveMontage;
 	float CachedVaultCosineThreshold = -1.f;
+	
 };
 
