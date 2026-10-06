@@ -124,9 +124,8 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			DrawDebugPoint(GetWorld(), OutVaultData.LedgePoint, 5, FColor::Purple, false, 5.f, 10.f);
 			
 			FVector MantleFinalPosition = VerticalWallHit.ImpactPoint;
-			MantleFinalPosition.Z += CapsuleShape.GetCapsuleHalfHeight();
 			
-			FVector VaultTraceStart = MantleFinalPosition;
+			FVector VaultTraceStart = MantleFinalPosition + CapsuleShape.GetCapsuleHalfHeight();
 			VaultTraceStart += (-OutVaultData.FrontWallNormal).GetSafeNormal2D() * MinSpaceToVaultFromLedgePoint;
 			
 			FVector VaultTraceEnd = FVector{VaultTraceStart.X, VaultTraceStart.Y, FloorZ};
