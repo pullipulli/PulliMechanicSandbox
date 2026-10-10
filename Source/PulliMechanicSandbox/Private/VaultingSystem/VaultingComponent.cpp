@@ -125,7 +125,8 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			
 			FVector MantleFinalPosition = VerticalWallHit.ImpactPoint;
 			
-			FVector VaultTraceStart = MantleFinalPosition + CapsuleShape.GetCapsuleHalfHeight();
+			FVector VaultTraceStart = MantleFinalPosition;
+			VaultTraceStart.Z += CapsuleShape.GetCapsuleHalfHeight();
 			VaultTraceStart += (-OutVaultData.FrontWallNormal).GetSafeNormal2D() * MinSpaceToVaultFromLedgePoint;
 			
 			FVector VaultTraceEnd = FVector{VaultTraceStart.X, VaultTraceStart.Y, FloorZ};
@@ -218,11 +219,13 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 		(-VaultData.FrontWallNormal).Rotation()
 	);
 	
+	FVector WorldSpaceHandOffset = GetOwner()->GetActorRotation().RotateVector(HandOffset);
+	
 	CharacterMotionWarpingComponent->AddOrUpdateWarpTargetFromLocationAndRotation(
-	FName("LedgePoint"),
-	VaultData.LedgePoint,
-	(-VaultData.FrontWallNormal).Rotation()
-);
+		FName("LedgePoint"),
+		VaultData.LedgePoint + WorldSpaceHandOffset,
+		(-VaultData.FrontWallNormal).Rotation()
+	);
 	
 	for (const auto& NotifyEvent : ActiveMontage->Notifies)
 	{

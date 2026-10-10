@@ -67,6 +67,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
 	float GroundTraceTolerance = 10.f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Tuning")
+	FVector HandOffset = FVector::ZeroVector;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Animation")
 	TObjectPtr<UAnimMontage> VaultMontage;
 
