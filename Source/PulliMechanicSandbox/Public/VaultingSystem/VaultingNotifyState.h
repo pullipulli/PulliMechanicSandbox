@@ -20,6 +20,7 @@ class PULLIMECHANICSANDBOX_API UVaultingNotifyState : public UAnimNotifyState
 public:
 	FVaultAnimationEvent VaultAnimationStart;
 	FVaultAnimationEvent VaultAnimationStop;
+	FVaultAnimationEvent VaultAnimationTick;
 	
 protected:
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;

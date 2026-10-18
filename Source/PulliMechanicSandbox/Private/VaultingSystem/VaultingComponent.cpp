@@ -10,7 +10,7 @@
 
 UVaultingComponent::UVaultingComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UVaultingComponent::BeginPlay()
@@ -164,9 +164,9 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 			{
 				float HitGroundZ = MantleHitResult.ImpactPoint.Z;
 				float GroundDiff = FMath::Abs(HitGroundZ - FloorZ);
-				if (GroundDiff <= GroundTraceTolerance)
+				if (GroundDiff <= GroundTraceCapsuleTolerance)
 				{
-					OutVaultData.bShouldMantle = false;
+					OutVaultData.bShouldVault = true;
 					OutVaultData.TargetLandingLocation = MantleHitResult.Location;
 				}
 				else
@@ -205,7 +205,7 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 		GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoMantle!");
 		ActiveMontage = MantleMontage;
 	}
-	else
+	if (VaultData.bShouldVault)
 	{
 		GEngine->AddOnScreenDebugMessage(-1,1, FColor::Blue, "DoVault!");
 		ActiveMontage = VaultMontage;
@@ -241,6 +241,10 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 	
 	SkeletonAnimInstance->OnMontageEnded.AddDynamic(this, &UVaultingComponent::OnAnimMontageEnd);
 	SkeletonAnimInstance->Montage_Play(ActiveMontage);
+	if (CurrentVaultData.bShouldVault)
+	{
+		ActiveVaultingNotifyState->VaultAnimationTick.AddDynamic(this, &UVaultingComponent::CheckForGround);
+	}
 	
 	//GetOwner()->SetActorLocation(VaultData.TargetLandingLocation);
 }
@@ -276,6 +280,39 @@ void UVaultingComponent::OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupt
 	if (Montage == ActiveMontage && bInterrupted)
 	{
 		OnVaultNotifyEnd();
+	}
+}
+
+void UVaultingComponent::CheckForGround()
+{
+	FHitResult GroundHit;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.AddIgnoredActor(CurrentVaultData.LandingActor);
+	
+	if (GetWorld()->LineTraceSingleByChannel(
+		GroundHit,
+		CharacterMovementComponent->GetActorFeetLocation(),
+		CharacterMovementComponent->GetActorFeetLocation() - CharacterCapsuleComponent->GetUpVector() * GroundTraceWhileVaultingTolerance,
+		ECC_WorldStatic,
+		QueryParams
+		))
+	{
+		OnGroundHitAfterVault();
+	}
+}
+
+void UVaultingComponent::OnGroundHitAfterVault()
+{
+	if (CurrentVaultData.bShouldVault)
+	{
+		FAlphaBlendArgs AlphaBlend;
+		AlphaBlend.BlendOption = EAlphaBlendOption::QuadraticInOut;
+		AlphaBlend.BlendTime = 0.1f;
+		SkeletonAnimInstance->Montage_StopWithBlendOut(AlphaBlend, VaultMontage);
+		
+		ActiveVaultingNotifyState->VaultAnimationTick.RemoveDynamic(this, &UVaultingComponent::CheckForGround);
+		UE_LOG(LogTemp, Log, TEXT("GROUND HIT WHILE VAULTING, STOP MONTAGE"));
 	}
 }
 

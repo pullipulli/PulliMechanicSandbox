@@ -25,4 +25,7 @@ void UVaultingNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeq
 	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
+	
+	if (VaultAnimationTick.IsBound())
+		VaultAnimationTick.Broadcast();
 }

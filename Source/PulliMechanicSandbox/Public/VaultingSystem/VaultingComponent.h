@@ -65,7 +65,10 @@ protected:
 	float CapsuleZOffset = 5.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
-	float GroundTraceTolerance = 10.f;
+	float GroundTraceCapsuleTolerance = 10.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Trace")
+	float GroundTraceWhileVaultingTolerance = 0.1f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings|Tuning")
 	FVector HandOffset = FVector::ZeroVector;
@@ -84,10 +87,14 @@ protected:
 	
 	UFUNCTION()
 	void OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+	
+	UFUNCTION()
+	void CheckForGround();
 private:
 	bool CanTryToVault() const;
 	bool HasHitValidWall(const FHitResult& Hit, const FVector& TraceDirection) const;
 	bool TrySearchingForValidLedgePoint(const FVector& LedgePointTraceStart, const FVector& LedgePointTraceEnd, FHitResult& VerticalWallHit, const FCollisionQueryParams& CollisionParams) const;
+	void OnGroundHitAfterVault();
 	
 	FVaultResult CurrentVaultData;
 	UPROPERTY()
