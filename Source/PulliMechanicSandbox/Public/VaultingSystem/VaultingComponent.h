@@ -55,6 +55,9 @@ protected:
 	float MinSpeedToVault = .5f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
+	float MaxSpeedToUseCharacterForward = 2.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")
 	float MaxDegreesBeforeVault = 75.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vaulting|Settings")

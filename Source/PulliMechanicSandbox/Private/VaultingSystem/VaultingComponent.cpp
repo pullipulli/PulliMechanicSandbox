@@ -109,7 +109,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 	FVector CurrentVelocity = CharacterMovementComponent->Velocity;
 	FVector TraceDirection;
 	
-	if (FVector2D(CurrentVelocity).IsNearlyZero())
+	if (FVector2D(CurrentVelocity).SquaredLength() <= MaxSpeedToUseCharacterForward*MaxSpeedToUseCharacterForward) 
 	{
 		TraceDirection = GetOwner()->GetActorForwardVector();
 	}
