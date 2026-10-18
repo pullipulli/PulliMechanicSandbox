@@ -261,6 +261,7 @@ void UVaultingComponent::OnVaultNotifyEnd()
 {
 	if (IsValid(ActiveVaultingNotifyState))
 	{
+		
 		ActiveVaultingNotifyState->VaultAnimationStart.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
 		ActiveVaultingNotifyState->VaultAnimationStop.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
 	}
@@ -274,8 +275,7 @@ void UVaultingComponent::OnVaultNotifyEnd()
 	ActiveMontage = nullptr;
 	CurrentVaultData.bIsValid = false;
 	
-	if (OnVaultFinished.IsBound())
-		OnVaultFinished.Broadcast();
+	OnVaultFinished.Broadcast();
 }
 
 void UVaultingComponent::OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupted)

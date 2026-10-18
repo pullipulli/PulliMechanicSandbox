@@ -8,8 +8,8 @@ void UVaultingNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 	
-	if (VaultAnimationStart.IsBound())
-		VaultAnimationStart.Broadcast();
+
+	VaultAnimationStart.Broadcast();
 }
 
 void UVaultingNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -17,8 +17,7 @@ void UVaultingNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequ
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 	
-	if (VaultAnimationStop.IsBound())
-		VaultAnimationStop.Broadcast();
+	VaultAnimationStop.Broadcast();
 }
 
 void UVaultingNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -26,6 +25,5 @@ void UVaultingNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSeq
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 	
-	if (VaultAnimationTick.IsBound())
-		VaultAnimationTick.Broadcast();
+	VaultAnimationTick.Broadcast();
 }
