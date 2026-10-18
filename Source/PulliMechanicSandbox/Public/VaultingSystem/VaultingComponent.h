@@ -7,8 +7,6 @@
 #include "Components/ActorComponent.h"
 #include "VaultingComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVaultEventSignature);
-
 
 class UVaultingNotifyState;
 class UMotionWarpingComponent;
@@ -22,14 +20,14 @@ class UVaultingComponent : public UActorComponent
 
 public:	
 	UVaultingComponent();
-	
-	FVaultEventSignature OnVaultFinished;
 
 	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	bool TryDetectVault(FVaultResult& OutVaultData) const;
 	void DoVault(const FVaultResult& VaultData);
+	bool IsVaulting() const;
 	
 protected:
 	UPROPERTY()
@@ -101,11 +99,20 @@ private:
 	void OnGroundHitAfterVault();
 	
 	FVaultResult CurrentVaultData;
+	
+	UPROPERTY()
+	TObjectPtr<UVaultingNotifyState> MantleNotifyState = nullptr;
+	
+	UPROPERTY()
+	TObjectPtr<UVaultingNotifyState> VaultNotifyState = nullptr;
+	
 	UPROPERTY()
 	TObjectPtr<UVaultingNotifyState> ActiveVaultingNotifyState = nullptr;
+	
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ActiveMontage;
-	float CachedVaultCosineThreshold = -1.f;
 	
+	float CachedVaultCosineThreshold = -1.f;
+	bool bIsVaulting = false;
 };
 

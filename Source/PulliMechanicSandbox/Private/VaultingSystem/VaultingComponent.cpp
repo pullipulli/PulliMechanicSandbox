@@ -23,6 +23,55 @@ void UVaultingComponent::BeginPlay()
 	SkeletonAnimInstance = GetOwner()->FindComponentByClass<USkeletalMeshComponent>()->GetAnimInstance();
 	
 	CachedVaultCosineThreshold = FMath::Cos(FMath::DegreesToRadians(MaxDegreesBeforeVault));
+	
+	SkeletonAnimInstance->OnMontageEnded.AddDynamic(this, &UVaultingComponent::OnAnimMontageEnd);
+	
+	for (const auto& NotifyEvent : VaultMontage->Notifies)
+	{
+		if (auto* VaultNotify = Cast<UVaultingNotifyState>(NotifyEvent.NotifyStateClass))
+		{
+			VaultNotifyState = VaultNotify;
+			break;
+		}
+	}
+	
+	VaultNotifyState->VaultAnimationStart.AddDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
+	VaultNotifyState->VaultAnimationStop.AddDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
+	VaultNotifyState->VaultAnimationTick.AddDynamic(this, &UVaultingComponent::CheckForGround);
+	
+	for (const auto& NotifyEvent : MantleMontage->Notifies)
+	{
+		if (auto* VaultNotify = Cast<UVaultingNotifyState>(NotifyEvent.NotifyStateClass))
+		{
+			MantleNotifyState = VaultNotify;
+
+			break;
+		}
+	}
+	
+	MantleNotifyState->VaultAnimationStart.AddDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
+	MantleNotifyState->VaultAnimationStop.AddDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
+}
+
+void UVaultingComponent::BeginDestroy()
+{
+	Super::BeginDestroy();
+	
+	if (IsValid(VaultNotifyState))
+	{
+		VaultNotifyState->VaultAnimationStart.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
+		VaultNotifyState->VaultAnimationStop.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
+		VaultNotifyState->VaultAnimationTick.RemoveDynamic(this, &UVaultingComponent::CheckForGround);
+	}
+
+	if (IsValid(VaultNotifyState))
+	{
+		MantleNotifyState->VaultAnimationStart.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
+		MantleNotifyState->VaultAnimationStop.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
+	}
+
+	if (IsValid(SkeletonAnimInstance))
+		SkeletonAnimInstance->OnMontageEnded.RemoveDynamic(this, &UVaultingComponent::OnAnimMontageEnd);
 }
 
 
@@ -198,6 +247,7 @@ bool UVaultingComponent::TryDetectVault(FVaultResult& OutVaultData) const
 
 void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 {
+	bIsVaulting = false;
 	if (!VaultData.bIsValid) return;
 	
 	if (VaultData.bShouldMantle)
@@ -227,31 +277,32 @@ void UVaultingComponent::DoVault(const FVaultResult& VaultData)
 		(-VaultData.FrontWallNormal).Rotation()
 	);
 	
-	for (const auto& NotifyEvent : ActiveMontage->Notifies)
+	bIsVaulting = true;
+	
+	if (VaultData.bShouldVault)
 	{
-		if (auto* VaultNotify = Cast<UVaultingNotifyState>(NotifyEvent.NotifyStateClass))
-		{
-			VaultNotify->VaultAnimationStart.AddDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
-			VaultNotify->VaultAnimationStop.AddDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
-			
-			ActiveVaultingNotifyState = VaultNotify;
-			break;
-		}
+		ActiveVaultingNotifyState = VaultNotifyState;
+	}
+	else if (VaultData.bShouldMantle)
+	{
+		ActiveVaultingNotifyState = MantleNotifyState;
 	}
 	
-	SkeletonAnimInstance->OnMontageEnded.AddDynamic(this, &UVaultingComponent::OnAnimMontageEnd);
+	ActiveVaultingNotifyState = VaultNotifyState;
+	
 	SkeletonAnimInstance->Montage_Play(ActiveMontage);
-	if (CurrentVaultData.bShouldVault)
-	{
-		ActiveVaultingNotifyState->VaultAnimationTick.AddDynamic(this, &UVaultingComponent::CheckForGround);
-	}
-	
-	//GetOwner()->SetActorLocation(VaultData.TargetLandingLocation);
+}
+
+bool UVaultingComponent::IsVaulting() const
+{
+	return bIsVaulting;
 }
 
 
 void UVaultingComponent::OnVaultNotifyBegin()
 {
+	if (!IsVaulting()) return;
+	
 	CharacterMovementComponent->SetMovementMode(MOVE_Flying);
 	if (IsValid(CurrentVaultData.LandingActor))
 		CharacterCapsuleComponent->IgnoreActorWhenMoving(CurrentVaultData.LandingActor, true);
@@ -259,14 +310,8 @@ void UVaultingComponent::OnVaultNotifyBegin()
 
 void UVaultingComponent::OnVaultNotifyEnd()
 {
-	if (IsValid(ActiveVaultingNotifyState))
-	{
-		
-		ActiveVaultingNotifyState->VaultAnimationStart.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyBegin);
-		ActiveVaultingNotifyState->VaultAnimationStop.RemoveDynamic(this, &UVaultingComponent::OnVaultNotifyEnd);
-	}
-
-	SkeletonAnimInstance->OnMontageEnded.RemoveDynamic(this, &UVaultingComponent::OnAnimMontageEnd);
+	if (!IsVaulting()) return;
+	
 	CharacterMovementComponent->SetMovementMode(MOVE_Walking);
 	if (IsValid(CurrentVaultData.LandingActor))
 		CharacterCapsuleComponent->IgnoreActorWhenMoving(CurrentVaultData.LandingActor, false);
@@ -274,8 +319,7 @@ void UVaultingComponent::OnVaultNotifyEnd()
 	ActiveVaultingNotifyState = nullptr;
 	ActiveMontage = nullptr;
 	CurrentVaultData.bIsValid = false;
-	
-	OnVaultFinished.Broadcast();
+	bIsVaulting = false;
 }
 
 void UVaultingComponent::OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -288,6 +332,8 @@ void UVaultingComponent::OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupt
 
 void UVaultingComponent::CheckForGround()
 {
+	if (!IsVaulting()) return;
+	
 	FHitResult GroundHit;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
@@ -314,7 +360,6 @@ void UVaultingComponent::OnGroundHitAfterVault()
 		AlphaBlend.BlendTime = 0.1f;
 		SkeletonAnimInstance->Montage_StopWithBlendOut(AlphaBlend, VaultMontage);
 		
-		ActiveVaultingNotifyState->VaultAnimationTick.RemoveDynamic(this, &UVaultingComponent::CheckForGround);
 		UE_LOG(LogTemp, Log, TEXT("GROUND HIT WHILE VAULTING, STOP MONTAGE"));
 	}
 }

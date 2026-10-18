@@ -106,9 +106,5 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
 private:
-	bool bIsVaulting = false;
-	
-	UFUNCTION()
-	void OnVaultFinish();
 };
 

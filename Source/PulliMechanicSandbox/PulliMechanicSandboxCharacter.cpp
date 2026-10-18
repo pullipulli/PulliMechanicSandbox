@@ -17,15 +17,12 @@
 void APulliMechanicSandboxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	VaultingComponent->OnVaultFinished.AddDynamic(this, &APulliMechanicSandboxCharacter::OnVaultFinish);
 }
 
 void APulliMechanicSandboxCharacter::BeginDestroy()
 {
 	Super::BeginDestroy();
-	
-	VaultingComponent->OnVaultFinished.RemoveDynamic(this, &APulliMechanicSandboxCharacter::OnVaultFinish);
+
 }
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
@@ -93,7 +90,7 @@ void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* 
 
 void APulliMechanicSandboxCharacter::Move(const FInputActionValue& Value)
 {
-	if (bIsVaulting) return;
+	if (VaultingComponent->IsVaulting()) return;
 	
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -113,7 +110,7 @@ void APulliMechanicSandboxCharacter::Look(const FInputActionValue& Value)
 
 void APulliMechanicSandboxCharacter::DoMove(float Right, float Forward)
 {
-	if (bIsVaulting) return;
+	if (VaultingComponent->IsVaulting()) return;
 	
 	if (GetController() != nullptr)
 	{
@@ -145,13 +142,12 @@ void APulliMechanicSandboxCharacter::DoLook(float Yaw, float Pitch)
 
 void APulliMechanicSandboxCharacter::DoJumpStart()
 {
-	if (bIsVaulting) return;
+	if (VaultingComponent->IsVaulting()) return;
 	
 	FVaultResult VaultResult;
 	if (VaultingComponent->TryDetectVault(VaultResult))
 	{
 		VaultingComponent->DoVault(VaultResult);
-		bIsVaulting = true;
 	}
 	else
 	{
@@ -165,9 +161,4 @@ void APulliMechanicSandboxCharacter::DoJumpEnd()
 	{
 		StopJumping();
 	}
-}
-
-void APulliMechanicSandboxCharacter::OnVaultFinish()
-{
-	bIsVaulting = false;
 }
