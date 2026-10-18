@@ -273,6 +273,9 @@ void UVaultingComponent::OnVaultNotifyEnd()
 	ActiveVaultingNotifyState = nullptr;
 	ActiveMontage = nullptr;
 	CurrentVaultData.bIsValid = false;
+	
+	if (OnVaultFinished.IsBound())
+		OnVaultFinished.Broadcast();
 }
 
 void UVaultingComponent::OnAnimMontageEnd(UAnimMontage* Montage, bool bInterrupted)

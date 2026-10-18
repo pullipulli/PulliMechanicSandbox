@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "PulliMechanicSandboxCharacter.h"
-#include "PulliMechanicSandboxCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -14,6 +13,20 @@
 #include "PulliMechanicSandbox.h"
 #include "VaultingSystem/VaultingComponent.h"
 #include "MotionWarpingComponent.h"
+
+void APulliMechanicSandboxCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	VaultingComponent->OnVaultFinished.AddDynamic(this, &APulliMechanicSandboxCharacter::OnVaultFinish);
+}
+
+void APulliMechanicSandboxCharacter::BeginDestroy()
+{
+	Super::BeginDestroy();
+	
+	VaultingComponent->OnVaultFinished.RemoveDynamic(this, &APulliMechanicSandboxCharacter::OnVaultFinish);
+}
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 {
@@ -80,6 +93,8 @@ void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* 
 
 void APulliMechanicSandboxCharacter::Move(const FInputActionValue& Value)
 {
+	if (bIsVaulting) return;
+	
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -98,6 +113,8 @@ void APulliMechanicSandboxCharacter::Look(const FInputActionValue& Value)
 
 void APulliMechanicSandboxCharacter::DoMove(float Right, float Forward)
 {
+	if (bIsVaulting) return;
+	
 	if (GetController() != nullptr)
 	{
 		// find out which way is forward
@@ -128,10 +145,13 @@ void APulliMechanicSandboxCharacter::DoLook(float Yaw, float Pitch)
 
 void APulliMechanicSandboxCharacter::DoJumpStart()
 {
+	if (bIsVaulting) return;
+	
 	FVaultResult VaultResult;
 	if (VaultingComponent->TryDetectVault(VaultResult))
 	{
 		VaultingComponent->DoVault(VaultResult);
+		bIsVaulting = true;
 	}
 	else
 	{
@@ -145,4 +165,9 @@ void APulliMechanicSandboxCharacter::DoJumpEnd()
 	{
 		StopJumping();
 	}
+}
+
+void APulliMechanicSandboxCharacter::OnVaultFinish()
+{
+	bIsVaulting = false;
 }

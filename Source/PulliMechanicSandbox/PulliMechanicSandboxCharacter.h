@@ -59,6 +59,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override;
 public:
 
 	/** Constructor */
@@ -102,5 +104,11 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	
+private:
+	bool bIsVaulting = false;
+	
+	UFUNCTION()
+	void OnVaultFinish();
 };
 

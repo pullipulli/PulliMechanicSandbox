@@ -7,6 +7,8 @@
 #include "Components/ActorComponent.h"
 #include "VaultingComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVaultEventSignature);
+
 
 class UVaultingNotifyState;
 class UMotionWarpingComponent;
@@ -20,6 +22,8 @@ class UVaultingComponent : public UActorComponent
 
 public:	
 	UVaultingComponent();
+	
+	FVaultEventSignature OnVaultFinished;
 
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
