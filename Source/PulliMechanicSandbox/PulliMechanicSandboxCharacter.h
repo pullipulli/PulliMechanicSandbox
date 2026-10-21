@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "PulliMechanicSandboxCharacter.generated.h"
 
+class UWallRunComponent;
 class UVaultingComponent;
 class USpringArmComponent;
 class UCameraComponent;
@@ -37,9 +38,13 @@ class APulliMechanicSandboxCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UVaultingComponent> VaultingComponent;
 	
-	/** Vaulting */
+	/** MotionWarping */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
+	
+	/** Vaulting */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWallRunComponent> WallRunComponent;
 	
 protected:
 

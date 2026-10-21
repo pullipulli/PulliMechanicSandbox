@@ -13,6 +13,7 @@
 #include "PulliMechanicSandbox.h"
 #include "VaultingSystem/VaultingComponent.h"
 #include "MotionWarpingComponent.h"
+#include "WallRunSystem/WallRunComponent.h"
 
 void APulliMechanicSandboxCharacter::BeginPlay()
 {
@@ -64,6 +65,7 @@ APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
 	
 	VaultingComponent = CreateDefaultSubobject<UVaultingComponent>(TEXT("VaultingComponent"));
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+	WallRunComponent = CreateDefaultSubobject<UWallRunComponent>(TEXT("WallRunComponent"));
 }
 
 void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
