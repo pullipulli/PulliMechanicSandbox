@@ -145,6 +145,7 @@ void APulliMechanicSandboxCharacter::DoLook(float Yaw, float Pitch)
 void APulliMechanicSandboxCharacter::DoJumpStart()
 {
 	if (VaultingComponent->IsVaulting()) return;
+	if (WallRunComponent->IsWallRunning()) return;
 	
 	FVaultResult VaultResult;
 	if (VaultingComponent->TryDetectVault(VaultResult))
@@ -154,11 +155,17 @@ void APulliMechanicSandboxCharacter::DoJumpStart()
 	else
 	{
 		Jump();
+		WallRunComponent->StartWallRunIfPossible();
 	}
 }
 
 void APulliMechanicSandboxCharacter::DoJumpEnd()
 {
+	if (WallRunComponent->IsWallRunning())
+	{
+		WallRunComponent->EndWallRun();
+	}
+	
 	if (bPressedJump)
 	{
 		StopJumping();
