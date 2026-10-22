@@ -165,6 +165,11 @@ void APulliMechanicSandboxCharacter::DoJumpStart()
 
 void APulliMechanicSandboxCharacter::DoJumpEnd()
 {
+	if (WallRunComponent->IsWallRunning())
+	{
+		WallRunComponent->EndWallRun();
+	}
+	
 	if (bPressedJump)
 	{
 		StopJumping();
@@ -173,6 +178,8 @@ void APulliMechanicSandboxCharacter::DoJumpEnd()
 
 void APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex() const
 {
+	if (WallRunComponent->IsWallRunning()) return;
+	
 	WallRunComponent->StartWallRunIfPossible();
 	// need to set it every time since it deactivates after each apex notify
 	GetCharacterMovement()->bNotifyApex = true;
@@ -184,4 +191,5 @@ void APulliMechanicSandboxCharacter::StopWallRunOnLanding(const FHitResult& Hit)
 	{
 		WallRunComponent->EndWallRun();
 	}
+	GetCharacterMovement()->bNotifyApex = true;
 }

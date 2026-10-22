@@ -11,6 +11,7 @@ UWallRunComponent::UWallRunComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 
 	// ...
 }
@@ -69,6 +70,9 @@ FVector UWallRunComponent::CalculateCurrentMovementDirection()
 		3.0f,
 		10
 	);
+	
+	// for now, it should work, in the future maybe I would want a tiny fall during the wallRun
+	MovementDirection.Z = 0.0f;
 	
 	return MovementDirection;
 }
@@ -141,11 +145,10 @@ bool UWallRunComponent::StartWallRunIfPossible()
 		CurrentChosenHandHitResult = LeftHandHitResult;
 		CurrentHand = ESelectedWallRunHand::LeftHand;
 	}
-		
-	//TODO StartWallRun logic!
 	
 	FVector MovementDirection = CalculateCurrentMovementDirection();
 	
+	// start WallRun logic in the tick!
 	SetComponentTickEnabled(true);
 	return true;
 }
@@ -166,7 +169,6 @@ bool UWallRunComponent::IsWallRunning() const
 void UWallRunComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	SetComponentTickEnabled(false);
 	
 	CharacterMovementComponent = GetOwner()->FindComponentByClass<UCharacterMovementComponent>();
 	CharacterCapsuleComponent = GetOwner()->FindComponentByClass<UCapsuleComponent>();
@@ -183,7 +185,8 @@ void UWallRunComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	if (!IsWallRunning()) return;
 	
 	FVector MovementDirection = CalculateCurrentMovementDirection();
+	float ForwardSpeed = FVector::DotProduct(CharacterMovementComponent->Velocity, MovementDirection);
 	
-	
+	CharacterMovementComponent->Velocity = MovementDirection * ForwardSpeed;
 }
 
