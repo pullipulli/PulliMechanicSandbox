@@ -8,7 +8,6 @@
 #include "Components/ActorComponent.h"
 #include "WallRunComponent.generated.h"
 
-
 class UCapsuleComponent;
 class UCharacterMovementComponent;
 
@@ -18,6 +17,8 @@ enum class ESelectedWallRunHand : uint8 {
 	RightHand UMETA(DisplayName = "Right Hand")
 };
 
+DECLARE_LOG_CATEGORY_CLASS(LogWallRun, Log, All);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PULLIMECHANICSANDBOX_API UWallRunComponent : public UActorComponent
 {
@@ -26,7 +27,7 @@ class PULLIMECHANICSANDBOX_API UWallRunComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UWallRunComponent();
-	
+
 	UFUNCTION(BlueprintCallable)
 	bool StartWallRunIfPossible();
 	
@@ -50,6 +51,7 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="WallRun|Hands")
 	float HandRaycastRadius = 2.0f;
+
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -58,6 +60,10 @@ private:
 	bool bIsWallRunning = false;
 	FCollisionShape SphereShape;
 	ESelectedWallRunHand CurrentHand;
+	FHitResult CurrentChosenHandHitResult;
+	FVector TotalHandOffset;
+	
+	FVector CalculateCurrentMovementDirection();
 	
 	UPROPERTY()
 	TObjectPtr<UCharacterMovementComponent> CharacterMovementComponent;
