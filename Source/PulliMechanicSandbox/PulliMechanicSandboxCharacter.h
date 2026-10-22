@@ -66,6 +66,8 @@ protected:
 
 	virtual void BeginPlay() override;
 	virtual void BeginDestroy() override;
+	
+	
 public:
 
 	/** Constructor */
@@ -101,7 +103,6 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
-
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -111,5 +112,10 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
 private:
+	UFUNCTION()
+	void CheckForWallRunOnJumpApex() const;
+	
+	UFUNCTION()
+	void StopWallRunOnLanding(const FHitResult& Hit) const;
 };
 

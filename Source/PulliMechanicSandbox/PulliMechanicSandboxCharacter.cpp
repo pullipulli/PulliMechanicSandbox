@@ -18,12 +18,17 @@
 void APulliMechanicSandboxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	GetCharacterMovement()->bNotifyApex = true;
+	OnReachedJumpApex.AddDynamic(this, &APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex);
+	LandedDelegate.AddDynamic(this, &APulliMechanicSandboxCharacter::StopWallRunOnLanding);
 }
 
 void APulliMechanicSandboxCharacter::BeginDestroy()
 {
 	Super::BeginDestroy();
 
+	OnReachedJumpApex.RemoveDynamic(this, &APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex);
 }
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
@@ -155,19 +160,28 @@ void APulliMechanicSandboxCharacter::DoJumpStart()
 	else
 	{
 		Jump();
-		WallRunComponent->StartWallRunIfPossible();
 	}
 }
 
 void APulliMechanicSandboxCharacter::DoJumpEnd()
 {
-	if (WallRunComponent->IsWallRunning())
-	{
-		WallRunComponent->EndWallRun();
-	}
-	
 	if (bPressedJump)
 	{
 		StopJumping();
+	}
+}
+
+void APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex() const
+{
+	WallRunComponent->StartWallRunIfPossible();
+	// need to set it every time since it deactivates after each apex notify
+	GetCharacterMovement()->bNotifyApex = true;
+}
+
+void APulliMechanicSandboxCharacter::StopWallRunOnLanding(const FHitResult& Hit) const
+{
+	if (WallRunComponent->IsWallRunning())
+	{
+		WallRunComponent->EndWallRun();
 	}
 }
