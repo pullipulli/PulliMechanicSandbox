@@ -42,21 +42,29 @@ FVector UWallRunComponent::CalculateCurrentMovementDirection()
 		SphereShape
 	);
 	
-	DrawDebugSphere(
-		GetWorld(),
-		HandRaycastEndLocation,
-		SphereShape.GetSphereRadius(),
-		50,
-		FColor::Red,
-		false,
-		2.f
-	);
-	
 	// before this, we should also check if there is a 90° internal turn using a forward sweep!
 	if (!bHasHandHit)
 	{
-		UE_LOG(LogWallRun, Warning, TEXT("In this case should try to check if there is 90° external turn!"));
-		return CharacterMovementComponent->Velocity.GetSafeNormal();	// for now, just copy the original velocity so we reset the WallRun
+		FHitResult FrontSweepHitResult;
+		bool bHasHitForwardWall = GetWorld()->SweepSingleByChannel(
+			FrontSweepHitResult,
+			CapsuleLocation,
+			CapsuleLocation + CharacterMovementComponent->Velocity.GetSafeNormal2D() * InitialHandRaycastLength,
+			FQuat::Identity,
+			ECC_WALL_RUN,
+			CharacterCapsuleComponent->GetCollisionShape()
+		);
+		
+		if (bHasHitForwardWall)
+		{
+			UE_LOG(LogWallRun, Warning, TEXT("In this case should try to check if there is 90° external turn!"));
+			
+			return FVector::CrossProduct(FrontSweepHitResult.ImpactNormal, FVector::UpVector);
+		}
+		
+		// if there is nothing on front, we just want to finish the wall run
+		// technically we could check for external 90° turns
+		return CharacterMovementComponent->Velocity.GetSafeNormal();	
 	}
 	
 	FVector MovementDirection = FVector::CrossProduct(CurrentChosenHandHitResult.ImpactNormal, FVector::DownVector);
