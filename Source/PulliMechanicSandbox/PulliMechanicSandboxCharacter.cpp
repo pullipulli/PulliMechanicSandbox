@@ -20,15 +20,12 @@ void APulliMechanicSandboxCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	GetCharacterMovement()->bNotifyApex = true;
-	OnReachedJumpApex.AddDynamic(this, &APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex);
 	LandedDelegate.AddDynamic(this, &APulliMechanicSandboxCharacter::StopWallRunOnLanding);
 }
 
 void APulliMechanicSandboxCharacter::BeginDestroy()
 {
 	Super::BeginDestroy();
-
-	OnReachedJumpApex.RemoveDynamic(this, &APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex);
 }
 
 APulliMechanicSandboxCharacter::APulliMechanicSandboxCharacter()
@@ -80,6 +77,7 @@ void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* 
 		
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APulliMechanicSandboxCharacter::DoJumpStart);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Ongoing, this, &APulliMechanicSandboxCharacter::JumpTick);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APulliMechanicSandboxCharacter::DoJumpEnd);
 
 		// Moving
@@ -93,6 +91,13 @@ void APulliMechanicSandboxCharacter::SetupPlayerInputComponent(UInputComponent* 
 	{
 		UE_LOG(LogPulliMechanicSandbox, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+}
+
+void APulliMechanicSandboxCharacter::JumpTick(const FInputActionValue& InputActionValue)
+{
+	if (VaultingComponent->IsVaulting()) return;
+	
+	WallRunComponent->StartWallRunIfPossible();
 }
 
 void APulliMechanicSandboxCharacter::Move(const FInputActionValue& Value)
@@ -174,15 +179,6 @@ void APulliMechanicSandboxCharacter::DoJumpEnd()
 	{
 		StopJumping();
 	}
-}
-
-void APulliMechanicSandboxCharacter::CheckForWallRunOnJumpApex() const
-{
-	if (WallRunComponent->IsWallRunning()) return;
-	
-	WallRunComponent->StartWallRunIfPossible();
-	// need to set it every time since it deactivates after each apex notify
-	GetCharacterMovement()->bNotifyApex = true;
 }
 
 void APulliMechanicSandboxCharacter::StopWallRunOnLanding(const FHitResult& Hit) const

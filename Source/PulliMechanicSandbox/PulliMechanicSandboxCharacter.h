@@ -79,7 +79,8 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
-
+	
+	void JumpTick(const FInputActionValue& InputActionValue);
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
@@ -112,9 +113,6 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
 private:
-	UFUNCTION()
-	void CheckForWallRunOnJumpApex() const;
-	
 	UFUNCTION()
 	void StopWallRunOnLanding(const FHitResult& Hit) const;
 };

@@ -17,6 +17,13 @@ enum class ESelectedWallRunHand : uint8 {
 	RightHand UMETA(DisplayName = "Right Hand")
 };
 
+UENUM(BlueprintType)
+enum class EWallRunApproachStatus : uint8 {
+	Frontal UMETA(DisplayName = "Frontal"),
+	Approaching UMETA(DisplayName = "Approaching"),
+	Leaving UMETA(DisplayName = "Leaving")
+};
+
 DECLARE_LOG_CATEGORY_CLASS(LogWallRun, Log, All);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -51,6 +58,12 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="WallRun|Hands")
 	float HandRaycastRadius = 2.0f;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="WallRun|Approaching", meta = (ClampMax = 179.0f, ClampMin = 91.0f))
+	float MinApproachAngle = 91.0f;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="WallRun|Approaching", meta = (ClampMax = 179.0f, ClampMin = 91.0f))
+	float MaxApproachAngle = 160.0f;
 
 public:
 	// Called every frame
@@ -64,6 +77,7 @@ private:
 	FVector TotalHandOffset;
 	
 	FVector CalculateCurrentMovementDirection();
+	EWallRunApproachStatus CalculateCurrentWallRunApproachStatus(FVector WallNormal) const;
 	
 	UPROPERTY()
 	TObjectPtr<UCharacterMovementComponent> CharacterMovementComponent;

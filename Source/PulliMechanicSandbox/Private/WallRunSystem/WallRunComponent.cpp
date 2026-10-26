@@ -42,10 +42,21 @@ FVector UWallRunComponent::CalculateCurrentMovementDirection()
 		SphereShape
 	);
 	
+	DrawDebugSphere(
+		GetWorld(),
+		HandRaycastEndLocation,
+		SphereShape.GetSphereRadius(),
+		50,
+		FColor::Red,
+		false,
+		2.f
+	);
+	
 	// before this, we should also check if there is a 90° internal turn using a forward sweep!
 	if (!bHasHandHit)
 	{
 		UE_LOG(LogWallRun, Warning, TEXT("In this case should try to check if there is 90° external turn!"));
+		return CharacterMovementComponent->Velocity.GetSafeNormal();	// for now, just copy the original velocity so we reset the WallRun
 	}
 	
 	FVector MovementDirection = FVector::CrossProduct(CurrentChosenHandHitResult.ImpactNormal, FVector::DownVector);
@@ -66,8 +77,8 @@ FVector UWallRunComponent::CalculateCurrentMovementDirection()
 		CurrentChosenHandHitResult.ImpactPoint + MovementDirection * InitialHandRaycastLength,
 		10.0f,
 		FColor::Green,
-		true,
-		3.0f,
+		false,
+		5.0f,
 		10
 	);
 	
@@ -75,6 +86,30 @@ FVector UWallRunComponent::CalculateCurrentMovementDirection()
 	MovementDirection.Z = 0.0f;
 	
 	return MovementDirection;
+}
+
+EWallRunApproachStatus UWallRunComponent::CalculateCurrentWallRunApproachStatus(FVector WallNormal) const
+{
+	float WallApproachAlignmentDot = FVector::DotProduct(CharacterMovementComponent->Velocity.GetSafeNormal2D(), WallNormal);
+	
+	float MaxLeavingAngle = MaxApproachAngle - 90.f;
+	float MinLeavingAngle = MinApproachAngle - 90.f;
+	
+	// negative cosine angle values
+	if (WallApproachAlignmentDot > FMath::Cos(FMath::DegreesToRadians(MaxApproachAngle)) &&
+		WallApproachAlignmentDot < FMath::Cos(FMath::DegreesToRadians(MinApproachAngle)))
+	{
+		return EWallRunApproachStatus::Approaching;
+	}
+	
+	// positive cosine angle values
+	if (WallApproachAlignmentDot < FMath::Cos(FMath::DegreesToRadians(MaxLeavingAngle)) &&
+		WallApproachAlignmentDot > FMath::Cos(FMath::DegreesToRadians(MinLeavingAngle)))
+	{
+		return EWallRunApproachStatus::Leaving;
+	}
+	
+	return EWallRunApproachStatus::Frontal;
 }
 
 bool UWallRunComponent::StartWallRunIfPossible()
@@ -133,8 +168,6 @@ bool UWallRunComponent::StartWallRunIfPossible()
 		return false;
 	}
 	
-	bIsWallRunning = true;
-	
 	if (bShouldUseRightHand)
 	{
 		CurrentChosenHandHitResult = RightHandHitResult;
@@ -145,6 +178,19 @@ bool UWallRunComponent::StartWallRunIfPossible()
 		CurrentChosenHandHitResult = LeftHandHitResult;
 		CurrentHand = ESelectedWallRunHand::LeftHand;
 	}
+	
+	switch (CalculateCurrentWallRunApproachStatus(CurrentChosenHandHitResult.ImpactNormal))
+	{
+	case EWallRunApproachStatus::Leaving:
+		bIsWallRunning = false;
+		return false;
+	case EWallRunApproachStatus::Approaching:
+		break;
+	case EWallRunApproachStatus::Frontal:
+		break;
+	}
+	
+	bIsWallRunning = true;
 	
 	FVector MovementDirection = CalculateCurrentMovementDirection();
 	
