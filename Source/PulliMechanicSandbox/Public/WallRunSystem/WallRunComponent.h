@@ -24,6 +24,27 @@ enum class EWallRunApproachStatus : uint8 {
 	Leaving UMETA(DisplayName = "Leaving")
 };
 
+USTRUCT(BlueprintType)
+struct PULLIMECHANICSANDBOX_API FWallRunAnimationData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly, Category="WallRun")
+	ESelectedWallRunHand Hand;
+	
+	UPROPERTY(BlueprintReadOnly, Category="WallRun")
+	FVector MovementDirection;
+	
+	UPROPERTY(BlueprintReadOnly, Category="WallRun")
+	FVector WallNormal;
+	
+	UPROPERTY(BlueprintReadOnly, Category="WallRun")
+	FVector Velocity;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWallRunComponentEvent, const FWallRunAnimationData&, WallAnimationData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWallRunComponentEventEnd);
+
 DECLARE_LOG_CATEGORY_CLASS(LogWallRun, Log, All);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -42,6 +63,15 @@ public:
 	void EndWallRun();
 	
 	bool IsWallRunning() const;
+	
+	UPROPERTY(BlueprintAssignable, Category="WallRun")
+	FWallRunComponentEvent OnWallRunStarted;
+	
+	UPROPERTY(BlueprintAssignable, Category="WallRun")
+	FWallRunComponentEvent OnWallRunTick;
+	
+	UPROPERTY(BlueprintAssignable, Category="WallRun")
+	FWallRunComponentEventEnd OnWallRunEnd;
 
 protected:
 	// Called when the game starts

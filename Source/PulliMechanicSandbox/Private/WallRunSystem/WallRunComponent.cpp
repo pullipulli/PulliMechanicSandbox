@@ -202,6 +202,15 @@ bool UWallRunComponent::StartWallRunIfPossible()
 	
 	FVector MovementDirection = CalculateCurrentMovementDirection();
 	
+	FWallRunAnimationData WallRunData;
+	
+	WallRunData.Hand = CurrentHand;
+	WallRunData.MovementDirection = MovementDirection;
+	WallRunData.WallNormal = CurrentChosenHandHitResult.ImpactNormal;
+	WallRunData.Velocity = CharacterMovementComponent->Velocity;
+	
+	OnWallRunStarted.Broadcast(WallRunData);
+	
 	// start WallRun logic in the tick!
 	SetComponentTickEnabled(true);
 	return true;
@@ -211,6 +220,7 @@ void UWallRunComponent::EndWallRun()
 {
 	SetComponentTickEnabled(false);
 	bIsWallRunning = false;
+	OnWallRunEnd.Broadcast();
 }
 
 bool UWallRunComponent::IsWallRunning() const
@@ -242,5 +252,14 @@ void UWallRunComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	float ForwardSpeed = FVector::DotProduct(CharacterMovementComponent->Velocity, MovementDirection);
 	
 	CharacterMovementComponent->Velocity = MovementDirection * ForwardSpeed;
+	
+	FWallRunAnimationData WallRunData;
+	
+	WallRunData.Hand = CurrentHand;
+	WallRunData.MovementDirection = MovementDirection;
+	WallRunData.WallNormal = CurrentChosenHandHitResult.ImpactNormal;
+	WallRunData.Velocity = CharacterMovementComponent->Velocity;
+	
+	OnWallRunTick.Broadcast(WallRunData);
 }
 
